@@ -1,0 +1,9 @@
+# Secrets
+Secrets.xcconfig
+
+# Xcode
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+DerivedData/
+.DS_Store
