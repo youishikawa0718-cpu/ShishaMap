@@ -10,7 +10,7 @@ import SwiftUI
 
 @main
 struct ShishaMapApp: App {
-    @State private var viewModel = StoreViewModel(repository: MockStoreRepository())
+    @State private var viewModel = StoreViewModel(repository: PlacesRepository())
 
     var body: some Scene {
         WindowGroup {
