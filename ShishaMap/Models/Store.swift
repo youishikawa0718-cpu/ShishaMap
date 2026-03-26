@@ -15,6 +15,7 @@ final class Store {
     var priceLevel: Int?
     var hasPrivateRoom: Bool
     var photoReference: String?
+    var isOpenNow: Bool
     var isFavorite: Bool
     @Relationship(deleteRule: .cascade) var checkIns: [CheckIn]
 
@@ -35,12 +36,25 @@ final class Store {
         self.hasPrivateRoom = hasPrivateRoom
         self.flavors = flavors
         self.openingHours = []
+        self.isOpenNow = false
         self.isFavorite = false
         self.checkIns = []
     }
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    var priceLevelText: String? {
+        guard let level = priceLevel else { return nil }
+        switch level {
+        case 0:  return "無料"
+        case 1:  return "¥1,000〜2,000"
+        case 2:  return "¥2,000〜3,000"
+        case 3:  return "¥3,000〜5,000"
+        case 4:  return "¥5,000〜"
+        default: return nil
+        }
     }
 }
 

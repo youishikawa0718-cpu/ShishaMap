@@ -14,9 +14,10 @@ struct FilterSheetView: View {
 
                 Section("価格帯（最大）") {
                     Picker("価格帯", selection: $filter.maxPriceLevel) {
-                        ForEach(1...4, id: \.self) { level in
-                            Text(String(repeating: "¥", count: level)).tag(level)
-                        }
+                        Text("〜¥2k").tag(1)
+                        Text("〜¥3k").tag(2)
+                        Text("〜¥5k").tag(3)
+                        Text("全て").tag(4)
                     }
                     .pickerStyle(.segmented)
                 }

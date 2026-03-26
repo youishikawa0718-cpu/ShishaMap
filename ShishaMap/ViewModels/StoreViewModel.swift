@@ -62,7 +62,7 @@ final class StoreViewModel {
 
     var filteredStores: [Store] {
         stores.filter { store in
-            (!filter.openNow) &&
+            (!filter.openNow || store.isOpenNow) &&
             (!filter.hasPrivateRoom || store.hasPrivateRoom) &&
             (store.priceLevel ?? 0) <= filter.maxPriceLevel &&
             (filter.flavorTags.isEmpty || !filter.flavorTags.isDisjoint(with: Set(store.flavors)))

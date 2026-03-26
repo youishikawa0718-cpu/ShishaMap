@@ -5,8 +5,32 @@ struct MapView: View {
     @Environment(StoreViewModel.self) private var viewModel
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .tokyo)
     @State private var selectedStoreID: String?
+    @State private var showFilter = false
 
     var body: some View {
+        ZStack {
+            mapContent
+            overlayControls
+        }
+        .sheet(item: selectedStore) { store in
+            NavigationStack {
+                MiniCardView(store: store)
+            }
+            .presentationDetents([.height(180)])
+            .presentationBackgroundInteraction(.enabled)
+        }
+        .sheet(isPresented: $showFilter) {
+            FilterSheetView(filter: Bindable(viewModel).filter)
+                .presentationDetents([.medium])
+        }
+        .task {
+            await viewModel.fetchNearby(coordinate: .tokyo)
+        }
+    }
+
+    // MARK: - マップ本体
+
+    private var mapContent: some View {
         Map(position: $cameraPosition, selection: $selectedStoreID) {
             UserAnnotation()
             ForEach(viewModel.filteredStores) { store in
@@ -19,17 +43,17 @@ struct MapView: View {
         .mapControls {
             MapCompass()
             MapUserLocationButton()
-            MapScaleView()
         }
         .onMapCameraChange(frequency: .onEnd) { context in
             viewModel.fetchNearbyDebounced(coordinate: context.region.center)
         }
-        .sheet(item: selectedStore) { store in
-            MiniCardView(store: store)
-                .presentationDetents([.height(140)])
-                .presentationBackgroundInteraction(.enabled)
-        }
-        .overlay(alignment: .top) {
+    }
+
+    // MARK: - オーバーレイ
+
+    private var overlayControls: some View {
+        VStack {
+            // エラーバナー
             if let message = viewModel.errorMessage {
                 ErrorBannerView(
                     message: message,
@@ -39,11 +63,47 @@ struct MapView: View {
                 }
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
+
+            Spacer()
+
+            HStack {
+                Spacer()
+                VStack(spacing: 12) {
+                    // フィルターボタン
+                    Button { showFilter = true } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                            .font(.title)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .brown)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        if viewModel.filter.activeCount > 0 {
+                            Text("\(viewModel.filter.activeCount)")
+                                .font(.caption2).bold()
+                                .foregroundStyle(.white)
+                                .frame(width: 18, height: 18)
+                                .background(.red, in: Circle())
+                                .offset(x: 6, y: -6)
+                        }
+                    }
+
+                    // 現在地ボタン
+                    Button {
+                        withAnimation { cameraPosition = .userLocation(fallback: .tokyo) }
+                    } label: {
+                        Image(systemName: "location.circle.fill")
+                            .font(.title)
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .brown)
+                    }
+                }
+                .padding(12)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .padding()
+            .padding(.bottom, 8)
         }
         .animation(.easeInOut, value: viewModel.errorMessage)
-        .task {
-            await viewModel.fetchNearby(coordinate: .tokyo)
-        }
     }
 
     /// selectedStoreID から Store を逆引きする
@@ -68,6 +128,7 @@ private struct ErrorBannerView: View {
             if isRetryable {
                 Button("再試行", action: onRetry)
                     .buttonStyle(.borderedProminent)
+                    .tint(.brown)
             }
         }
         .padding()
