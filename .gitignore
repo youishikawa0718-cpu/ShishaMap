@@ -2,6 +2,7 @@
 Secrets.xcconfig
 
 # Xcode
+xcuserdata/
 *.xcuserstate
 *.xccheckout
 *.moved-aside

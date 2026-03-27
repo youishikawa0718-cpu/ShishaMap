@@ -17,11 +17,12 @@ struct SearchView: View {
                     ContentUnavailableView.search(text: query)
                 } else {
                     List(filteredStores) { store in
-                        NavigationLink {
-                            StoreDetailView(store: store)
+                        Button {
+                            viewModel.focusOnMap(store)
                         } label: {
                             StoreRowView(store: store)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }

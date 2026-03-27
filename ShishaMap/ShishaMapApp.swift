@@ -11,11 +11,13 @@ import SwiftUI
 @main
 struct ShishaMapApp: App {
     @State private var viewModel = StoreViewModel(repository: PlacesRepository())
+    @State private var locationManager = LocationManager()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(viewModel)
+                .environment(locationManager)
         }
         .modelContainer(for: [Store.self, CheckIn.self])
     }

@@ -10,6 +10,8 @@ final class StoreViewModel {
     var errorMessage: String?
     var isRetryable = false
     var filter = FilterCriteria()
+    var selectedTab: Int = 0
+    var mapFocusedStore: Store?
 
     // MARK: - 非公開
     private let repository: StoreRepositoryProtocol
@@ -50,6 +52,18 @@ final class StoreViewModel {
             errorMessage = appError.errorDescription
             isRetryable = appError.isRetryable
         }
+    }
+
+    /// 検索結果タップ時にマップタブへ切り替えて該当店舗にフォーカスする
+    func focusOnMap(_ store: Store) {
+        mapFocusedStore = store
+        selectedTab = 0
+    }
+
+    /// 位置情報権限拒否エラーを表示する
+    func showLocationPermissionError() {
+        errorMessage = AppError.locationPermissionDenied.errorDescription
+        isRetryable = false
     }
 
     /// エラー時のリトライ

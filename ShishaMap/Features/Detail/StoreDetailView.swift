@@ -62,11 +62,11 @@ struct StoreDetailView: View {
 
     private var photoPlaceholder: some View {
         Rectangle()
-            .fill(Color.brown.opacity(0.08))
+            .fill(Color(.secondarySystemBackground))
             .overlay {
                 Image(systemName: "smoke.fill")
                     .font(.system(size: 48))
-                    .foregroundStyle(Color.brown.opacity(0.3))
+                    .foregroundStyle(Color.brown.opacity(0.5))
             }
     }
 
@@ -101,9 +101,10 @@ struct StoreDetailView: View {
                         ForEach(store.flavors, id: \.self) { flavor in
                             Text(flavor)
                                 .font(.caption)
+                                .foregroundStyle(Color.brown)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)
-                                .background(Color.brown.opacity(0.1))
+                                .background(Color.brown.opacity(0.15))
                                 .clipShape(Capsule())
                         }
                     }

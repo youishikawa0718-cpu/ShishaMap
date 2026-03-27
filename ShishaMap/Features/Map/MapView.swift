@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MapView: View {
     @Environment(StoreViewModel.self) private var viewModel
+    @Environment(LocationManager.self) private var locationManager
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .tokyo)
     @State private var selectedStoreID: String?
     @State private var showFilter = false
@@ -24,7 +25,27 @@ struct MapView: View {
                 .presentationDetents([.medium])
         }
         .task {
-            await viewModel.fetchNearby(coordinate: .tokyo)
+            locationManager.requestPermission()
+        }
+        .onChange(of: locationManager.currentLocation) { _, location in
+            guard let coordinate = location?.coordinate else { return }
+            Task { await viewModel.fetchNearby(coordinate: coordinate) }
+        }
+        .onChange(of: locationManager.authorizationStatus) { _, status in
+            if status == .denied || status == .restricted {
+                viewModel.showLocationPermissionError()
+            }
+        }
+        .onChange(of: viewModel.mapFocusedStore) { _, store in
+            guard let store else { return }
+            withAnimation {
+                cameraPosition = .region(MKCoordinateRegion(
+                    center: store.coordinate,
+                    latitudinalMeters: 500,
+                    longitudinalMeters: 500
+                ))
+            }
+            viewModel.mapFocusedStore = nil
         }
     }
 
@@ -53,6 +74,14 @@ struct MapView: View {
 
     private var overlayControls: some View {
         VStack {
+            // ローディングインジケーター
+            if viewModel.isLoading {
+                ProgressView()
+                    .padding(10)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+                    .transition(.opacity)
+            }
+
             // エラーバナー
             if let message = viewModel.errorMessage {
                 ErrorBannerView(
@@ -84,6 +113,9 @@ struct MapView: View {
                                 .frame(width: 18, height: 18)
                                 .background(.red, in: Circle())
                                 .offset(x: 6, y: -6)
+                                .transition(.scale.combined(with: .opacity))
+                                .contentTransition(.numericText())
+                                .animation(.spring(duration: 0.3), value: viewModel.filter.activeCount)
                         }
                     }
 

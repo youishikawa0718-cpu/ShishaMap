@@ -104,5 +104,6 @@ private extension Store {
         )
         self.priceLevel = result.priceLevel
         self.photoReference = result.photos?.first?.photoReference
+        self.isOpenNow = result.openingHours?.openNow ?? false
     }
 }
