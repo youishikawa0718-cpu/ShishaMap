@@ -14,7 +14,10 @@ final class Store {
     var flavors: [String]
     var priceLevel: Int?
     var hasPrivateRoom: Bool
-    var photoReference: String?
+    var photoReferences: [String] = []
+    var websiteURL: String?
+    var rating: Double?
+    var userRatingsTotal: Int?
     var isOpenNow: Bool
     var isFavorite: Bool
     @Relationship(deleteRule: .cascade) var checkIns: [CheckIn]
@@ -36,6 +39,7 @@ final class Store {
         self.hasPrivateRoom = hasPrivateRoom
         self.flavors = flavors
         self.openingHours = []
+        self.photoReferences = []
         self.isOpenNow = false
         self.isFavorite = false
         self.checkIns = []
@@ -43,6 +47,12 @@ final class Store {
 
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    /// 店名にシーシャ関連キーワードを含む場合を専門店とみなす
+    var isShishaSpecialty: Bool {
+        let keywords = ["シーシャ", "水煙草", "水タバコ", "hookah", "shisha", "HOOKAH", "SHISHA"]
+        return keywords.contains { name.localizedCaseInsensitiveContains($0) }
     }
 
     var priceLevelText: String? {
@@ -59,8 +69,8 @@ final class Store {
 }
 
 extension Store {
-    static let mocks: [Store] = [
-        Store(
+    static let mocks: [Store] = {
+        let tokyo = Store(
             placeID: "mock_001",
             name: "シーシャ東京",
             address: "渋谷区道玄坂1-1",
@@ -68,8 +78,23 @@ extension Store {
             longitude: 139.7016,
             hasPrivateRoom: true,
             flavors: ["フルーツ系", "ミント系"]
-        ),
-        Store(
+        )
+        tokyo.isOpenNow = true
+        tokyo.rating = 4.3
+        tokyo.userRatingsTotal = 128
+        tokyo.phoneNumber = "03-1234-5678"
+        tokyo.websiteURL = "https://example.com/shisha-tokyo"
+        tokyo.openingHours = [
+            "月曜日: 17:00 – 翌2:00",
+            "火曜日: 17:00 – 翌2:00",
+            "水曜日: 17:00 – 翌2:00",
+            "木曜日: 17:00 – 翌2:00",
+            "金曜日: 17:00 – 翌3:00",
+            "土曜日: 14:00 – 翌3:00",
+            "日曜日: 14:00 – 翌2:00"
+        ]
+
+        let hookah = Store(
             placeID: "mock_002",
             name: "HOOKAH LOUNGE",
             address: "新宿区歌舞伎町2-2",
@@ -77,8 +102,11 @@ extension Store {
             longitude: 139.7034,
             hasPrivateRoom: false,
             flavors: ["スパイス系"]
-        ),
-        Store(
+        )
+        hookah.rating = 3.8
+        hookah.userRatingsTotal = 54
+
+        let roppongi = Store(
             placeID: "mock_003",
             name: "シーシャバー六本木",
             address: "港区六本木3-3",
@@ -87,7 +115,12 @@ extension Store {
             hasPrivateRoom: true,
             flavors: ["フルーツ系", "フローラル系"]
         )
-    ]
+        roppongi.rating = 4.6
+        roppongi.userRatingsTotal = 312
+        roppongi.phoneNumber = "03-9876-5432"
+
+        return [tokyo, hookah, roppongi]
+    }()
 
     static var mock: Store { mocks[0] }
 }

@@ -52,9 +52,7 @@ struct StoreDetailView: View {
     // MARK: - 写真
 
     private var storePhoto: some View {
-        let refs = store.photoReferences.isEmpty
-            ? (store.photoReference.map { [$0] } ?? [])
-            : store.photoReferences
+        let refs = store.photoReferences
         return Group {
             if refs.isEmpty {
                 photoPlaceholder
