@@ -110,7 +110,6 @@ final class StoreViewModel {
             if let website = detail.websiteURL { store.websiteURL = website }
             if !detail.photoReferences.isEmpty {
                 store.photoReferences = detail.photoReferences
-                store.photoReference = detail.photoReferences.first
             }
             if let price = detail.priceLevel { store.priceLevel = price }
             if let r = detail.rating { store.rating = r }
@@ -141,7 +140,6 @@ final class StoreViewModel {
             existing.longitude = store.longitude
             existing.isOpenNow = store.isOpenNow
             if let price = store.priceLevel { existing.priceLevel = price }
-            if let ref = store.photoReference { existing.photoReference = ref }
             if !store.photoReferences.isEmpty { existing.photoReferences = store.photoReferences }
             if !store.flavors.isEmpty { existing.flavors = store.flavors }
             return existing

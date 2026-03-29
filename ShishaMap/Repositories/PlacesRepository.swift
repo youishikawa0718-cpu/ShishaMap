@@ -267,7 +267,6 @@ private extension Store {
         )
         self.priceLevel = result.priceLevel
         self.photoReferences = result.photos?.map { $0.photoReference } ?? []
-        self.photoReference = self.photoReferences.first
         self.isOpenNow = result.openingHours?.openNow ?? false
     }
 
@@ -286,7 +285,6 @@ private extension Store {
         self.openingHours = detail.openingHours?.weekdayText ?? []
         self.isOpenNow = detail.openingHours?.openNow ?? false
         self.photoReferences = detail.photos?.map { $0.photoReference } ?? []
-        self.photoReference = self.photoReferences.first
         self.priceLevel = detail.priceLevel
         self.rating = detail.rating
         self.userRatingsTotal = detail.userRatingsTotal
