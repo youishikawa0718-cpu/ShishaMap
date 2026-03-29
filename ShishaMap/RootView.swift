@@ -9,19 +9,15 @@ struct RootView: View {
         TabView(selection: Bindable(viewModel).selectedTab) {
             MapView()
                 .tabItem { Label("マップ", systemImage: "map.fill") }
-                .tag(0)
+                .tag(AppTab.map)
 
             SearchView()
                 .tabItem { Label("検索", systemImage: "magnifyingglass") }
-                .tag(1)
+                .tag(AppTab.search)
 
             FavoritesView()
                 .tabItem { Label("お気に入り", systemImage: "heart.fill") }
-                .tag(2)
-
-            CheckInHistoryView()
-                .tabItem { Label("履歴", systemImage: "clock.fill") }
-                .tag(3)
+                .tag(AppTab.favorites)
         }
         .tint(.brown)
     }
@@ -30,5 +26,5 @@ struct RootView: View {
 #Preview {
     RootView()
         .environment(StoreViewModel(repository: MockStoreRepository()))
-        .modelContainer(for: [Store.self, CheckIn.self], inMemory: true)
+        .modelContainer(for: [Store.self, CheckIn.self, RecentlyViewed.self], inMemory: true)
 }

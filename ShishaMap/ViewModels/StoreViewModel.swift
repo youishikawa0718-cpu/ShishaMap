@@ -1,5 +1,6 @@
 import CoreLocation
 import Observation
+import SwiftData
 
 @MainActor
 @Observable
@@ -7,20 +8,31 @@ final class StoreViewModel {
     // MARK: - 公開状態
     var stores: [Store] = []
     var isLoading = false
+    var isDetailLoading = false
     var errorMessage: String?
     var isRetryable = false
+    var errorRequiresSettings = false
     var filter = FilterCriteria()
-    var selectedTab: Int = 0
+    var selectedTab: AppTab = .map
     var mapFocusedStore: Store?
+
+    // エリア検索
+    var searchedAreaName: String? = nil
+    var searchedAreaCoordinate: CLLocationCoordinate2D? = nil
+    var isGeocodingLoading = false
 
     // MARK: - 非公開
     private let repository: StoreRepositoryProtocol
+    private let geocoder: GeocoderProtocol
     private var fetchTask: Task<Void, Never>?
     private var lastCoordinate: CLLocationCoordinate2D?
+    var modelContext: ModelContext?
 
     // MARK: - 初期化（DI）
-    init(repository: any StoreRepositoryProtocol) {
+    init(repository: any StoreRepositoryProtocol, geocoder: GeocoderProtocol? = nil, modelContext: ModelContext? = nil) {
         self.repository = repository
+        self.geocoder = geocoder ?? LocationGeocoder()
+        self.modelContext = modelContext
     }
 
     // MARK: - ユースケース
@@ -29,7 +41,7 @@ final class StoreViewModel {
     func fetchNearbyDebounced(coordinate: CLLocationCoordinate2D) {
         fetchTask?.cancel()
         fetchTask = Task {
-            try? await Task.sleep(for: .milliseconds(500))
+            try? await Task.sleep(for: .milliseconds(AppConstants.Search.debounceMilliseconds))
             guard !Task.isCancelled else { return }
             await fetchNearby(coordinate: coordinate)
         }
@@ -41,12 +53,31 @@ final class StoreViewModel {
         isLoading = true
         errorMessage = nil
         isRetryable = false
+        errorRequiresSettings = false
         defer { isLoading = false }
         do {
-            stores = try await repository.fetchNearby(
+            let fetched = try await repository.fetchNearby(
                 coordinate: coordinate,
                 radius: filter.radiusMeters
             )
+            stores = fetched.map { upsert($0) }
+        } catch {
+            let appError = AppError(from: error)
+            errorMessage = appError.errorDescription
+            isRetryable = appError.isRetryable
+        }
+    }
+
+    /// エリア名でシーシャ店を検索する
+    func searchByArea(query: String) async {
+        isGeocodingLoading = true
+        errorMessage = nil
+        defer { isGeocodingLoading = false }
+        do {
+            let coordinate = try await geocoder.coordinate(for: query)
+            searchedAreaName = query
+            searchedAreaCoordinate = coordinate
+            await fetchNearby(coordinate: coordinate)
         } catch {
             let appError = AppError(from: error)
             errorMessage = appError.errorDescription
@@ -57,13 +88,36 @@ final class StoreViewModel {
     /// 検索結果タップ時にマップタブへ切り替えて該当店舗にフォーカスする
     func focusOnMap(_ store: Store) {
         mapFocusedStore = store
-        selectedTab = 0
+        selectedTab = .map
     }
 
     /// 位置情報権限拒否エラーを表示する
     func showLocationPermissionError() {
         errorMessage = AppError.locationPermissionDenied.errorDescription
         isRetryable = false
+        errorRequiresSettings = true
+    }
+
+    /// 店舗詳細情報をAPIから取得し、既存のSwiftDataモデルへマージする
+    func loadDetail(store: Store) async {
+        isDetailLoading = true
+        defer { isDetailLoading = false }
+        do {
+            let detail = try await repository.fetchDetail(placeID: store.placeID)
+            if !detail.openingHours.isEmpty { store.openingHours = detail.openingHours }
+            if detail.isOpenNow { store.isOpenNow = detail.isOpenNow }
+            if let phone = detail.phoneNumber { store.phoneNumber = phone }
+            if let website = detail.websiteURL { store.websiteURL = website }
+            if !detail.photoReferences.isEmpty {
+                store.photoReferences = detail.photoReferences
+                store.photoReference = detail.photoReferences.first
+            }
+            if let price = detail.priceLevel { store.priceLevel = price }
+            if let r = detail.rating { store.rating = r }
+            if let total = detail.userRatingsTotal { store.userRatingsTotal = total }
+        } catch {
+            // 詳細取得はベストエフォート。基本情報は表示済みのため無視する
+        }
     }
 
     /// エラー時のリトライ
@@ -72,14 +126,45 @@ final class StoreViewModel {
         await fetchNearby(coordinate: coord)
     }
 
+    // MARK: - SwiftData upsert
+
+    /// API 結果を SwiftData に upsert し、managed な Store を返す。
+    /// ModelContext 未設定時はそのまま返す（Preview・テスト用）。
+    private func upsert(_ store: Store) -> Store {
+        guard let ctx = modelContext else { return store }
+        let id = store.placeID
+        let descriptor = FetchDescriptor<Store>(predicate: #Predicate { $0.placeID == id })
+        if let existing = try? ctx.fetch(descriptor).first {
+            existing.name = store.name
+            existing.address = store.address
+            existing.latitude = store.latitude
+            existing.longitude = store.longitude
+            existing.isOpenNow = store.isOpenNow
+            if let price = store.priceLevel { existing.priceLevel = price }
+            if let ref = store.photoReference { existing.photoReference = ref }
+            if !store.photoReferences.isEmpty { existing.photoReferences = store.photoReferences }
+            if !store.flavors.isEmpty { existing.flavors = store.flavors }
+            return existing
+        } else {
+            ctx.insert(store)
+            return store
+        }
+    }
+
     // MARK: - フィルタリング（クライアントサイド）
 
     var filteredStores: [Store] {
         stores.filter { store in
             (!filter.openNow || store.isOpenNow) &&
             (!filter.hasPrivateRoom || store.hasPrivateRoom) &&
+            (!filter.specialtyOnly || store.isShishaSpecialty) &&
             (store.priceLevel ?? 0) <= filter.maxPriceLevel &&
             (filter.flavorTags.isEmpty || !filter.flavorTags.isDisjoint(with: Set(store.flavors)))
         }
+    }
+
+    /// マップピン表示用。近い順に20件に絞ってタップしやすくする
+    var mapStores: [Store] {
+        Array(filteredStores.prefix(AppConstants.Map.maxPins))
     }
 }
