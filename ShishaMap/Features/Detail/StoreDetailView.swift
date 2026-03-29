@@ -75,7 +75,7 @@ struct StoreDetailView: View {
 
     private func photoCell(ref: String) -> some View {
         let apiKey = Bundle.main.infoDictionary?["PLACES_API_KEY"] as? String ?? ""
-        let url = URL(string: "https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=\(ref)&key=\(apiKey)")
+        let url = URL(string: "https://maps.googleapis.com/maps/api/place/photo?maxwidth=\(AppConstants.API.photoMaxWidth)&photoreference=\(ref)&key=\(apiKey)")
         return AsyncImage(url: url) { phase in
             switch phase {
             case .success(let image):
@@ -253,7 +253,7 @@ struct StoreDetailView: View {
                 storeAddress: store.address
             ))
             // 21件目以降を削除
-            all.dropFirst(19).forEach { modelContext.delete($0) }
+            all.dropFirst(AppConstants.Data.maxRecentlyViewed - 1).forEach { modelContext.delete($0) }
         }
     }
 

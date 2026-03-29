@@ -10,6 +10,7 @@ struct FilterSheetView: View {
                 Section("条件") {
                     Toggle("営業中のみ", isOn: $filter.openNow)
                     Toggle("個室あり", isOn: $filter.hasPrivateRoom)
+                    Toggle("シーシャ専門店のみ", isOn: $filter.specialtyOnly)
                 }
 
                 Section("価格帯（最大）") {
@@ -23,12 +24,16 @@ struct FilterSheetView: View {
                 }
 
                 Section("検索半径") {
-                    Slider(value: $filter.radiusMeters, in: 500...5000, step: 500) {
+                    Slider(
+                        value: $filter.radiusMeters,
+                        in: AppConstants.Search.minRadius...AppConstants.Search.maxRadius,
+                        step: AppConstants.Search.radiusStep
+                    ) {
                         Text("半径")
                     } minimumValueLabel: {
-                        Text("500m")
+                        Text("\(Int(AppConstants.Search.minRadius))m")
                     } maximumValueLabel: {
-                        Text("5km")
+                        Text("\(Int(AppConstants.Search.maxRadius / 1000))km")
                     }
                     Text("\(Int(filter.radiusMeters))m")
                         .frame(maxWidth: .infinity, alignment: .center)

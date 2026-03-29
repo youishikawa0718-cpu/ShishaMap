@@ -3,18 +3,22 @@ import Foundation
 struct FilterCriteria {
     var openNow: Bool = false
     var hasPrivateRoom: Bool = false
-    var maxPriceLevel: Int = 4
+    var specialtyOnly: Bool = false
+    var maxPriceLevel: Int = AppConstants.Filter.maxPriceLevel
     var flavorTags: Set<String> = []
-    var radiusMeters: Double = 1500
+    var radiusMeters: Double = AppConstants.Search.defaultRadius
 
     var isDefault: Bool {
-        !openNow && !hasPrivateRoom && maxPriceLevel == 4 && flavorTags.isEmpty && radiusMeters == 1500
+        !openNow && !hasPrivateRoom && !specialtyOnly
+        && maxPriceLevel == AppConstants.Filter.maxPriceLevel
+        && flavorTags.isEmpty
+        && radiusMeters == AppConstants.Search.defaultRadius
     }
 
     var activeCount: Int {
-        [openNow, hasPrivateRoom].filter { $0 }.count +
-        (maxPriceLevel < 4 ? 1 : 0) +
+        [openNow, hasPrivateRoom, specialtyOnly].filter { $0 }.count +
+        (maxPriceLevel < AppConstants.Filter.maxPriceLevel ? 1 : 0) +
         (flavorTags.isEmpty ? 0 : 1) +
-        (radiusMeters != 1500 ? 1 : 0)
+        (radiusMeters != AppConstants.Search.defaultRadius ? 1 : 0)
     }
 }

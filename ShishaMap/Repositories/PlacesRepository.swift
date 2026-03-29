@@ -6,7 +6,8 @@ final class PlacesRepository: StoreRepositoryProtocol {
     private let cache = NSCache<NSString, CacheEntry>()
 
     init() {
-        self.apiKey = Bundle.main.infoDictionary?["PLACES_API_KEY"] as? String ?? ""
+        self.apiKey = (Bundle.main.infoDictionary?["PLACES_API_KEY"] as? String ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func fetchNearby(coordinate: CLLocationCoordinate2D, radius: Double) async throws -> [Store] {
@@ -28,7 +29,7 @@ final class PlacesRepository: StoreRepositoryProtocol {
         repeat {
             // Places API requires ~2s before next_page_token becomes valid
             if pageToken != nil {
-                try await Task.sleep(for: .seconds(2))
+                try await Task.sleep(for: AppConstants.API.paginationDelay)
             }
 
             guard var components = URLComponents(string: "https://maps.googleapis.com/maps/api/place/nearbysearch/json") else {
@@ -61,7 +62,7 @@ final class PlacesRepository: StoreRepositoryProtocol {
             allResults += decoded.results
             pageToken = decoded.nextPageToken
             pageCount += 1
-        } while pageToken != nil && pageCount < 3
+        } while pageToken != nil && pageCount < AppConstants.API.maxPaginationPages
 
         var seen = Set<String>()
         let stores = allResults
@@ -144,7 +145,7 @@ final class PlacesRepository: StoreRepositoryProtocol {
 private final class CacheEntry {
     let stores: [Store]
     private let timestamp = Date()
-    var isValid: Bool { Date().timeIntervalSince(timestamp) < 300 }
+    var isValid: Bool { Date().timeIntervalSince(timestamp) < AppConstants.Cache.ttl }
     init(stores: [Store]) { self.stores = stores }
 }
 
