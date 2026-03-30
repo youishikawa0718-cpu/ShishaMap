@@ -1,5 +1,6 @@
 import CoreLocation
 import Foundation
+import OSLog
 
 final class PlacesRepository: StoreRepositoryProtocol {
     private let apiKey: String
@@ -14,8 +15,13 @@ final class PlacesRepository: StoreRepositoryProtocol {
         #if DEBUG
         guard !apiKey.isEmpty else { throw AppError.apiKeyMissing }
         #else
-        guard !apiKey.isEmpty else { return [] }
+        guard !apiKey.isEmpty else {
+            AppLogger.api.error("APIキーが未設定のためfetchNearbyをスキップ")
+            return []
+        }
         #endif
+
+        AppLogger.api.debug("fetchNearby開始 radius=\(Int(radius))m")
 
         let cacheKey = "\(coordinate.latitude),\(coordinate.longitude),\(radius)" as NSString
         if let entry = cache.object(forKey: cacheKey), entry.isValid {
@@ -69,15 +75,18 @@ final class PlacesRepository: StoreRepositoryProtocol {
             .filter { seen.insert($0.placeId).inserted }
             .map { Store(from: $0) }
 
+        AppLogger.api.debug("fetchNearby完了 \(stores.count)件取得")
         cache.setObject(CacheEntry(stores: stores), forKey: cacheKey)
         return stores
     }
 
     func fetchDetail(placeID: String) async throws -> Store {
+        AppLogger.api.debug("fetchDetail開始 placeID=\(placeID, privacy: .private)")
         #if DEBUG
         guard !apiKey.isEmpty else { throw AppError.apiKeyMissing }
         #else
         guard !apiKey.isEmpty else {
+            AppLogger.api.error("APIキーが未設定のためfetchDetailに失敗")
             throw AppError.unknown(NSError(domain: "PlacesRepository", code: -1))
         }
         #endif
@@ -107,6 +116,7 @@ final class PlacesRepository: StoreRepositoryProtocol {
         try validateAPIStatus(decoded.status)
 
         let store = Store(from: decoded.result, placeID: placeID)
+        AppLogger.api.debug("fetchDetail完了 placeID=\(placeID, privacy: .private)")
         cache.setObject(CacheEntry(stores: [store]), forKey: cacheKey)
         return store
     }
@@ -117,10 +127,18 @@ final class PlacesRepository: StoreRepositoryProtocol {
         guard let http = response as? HTTPURLResponse else { return }
         switch http.statusCode {
         case 200: break
-        case 429: throw AppError.rateLimitExceeded
-        case 401, 403: throw AppError.apiKeyMissing
-        case 400..<500: throw AppError.unknown(NSError(domain: "Places", code: http.statusCode))
-        case 500...: throw AppError.networkUnavailable
+        case 429:
+            AppLogger.api.warning("Places API レート制限超過 (429)")
+            throw AppError.rateLimitExceeded
+        case 401, 403:
+            AppLogger.api.error("Places API 認証エラー (\(http.statusCode))")
+            throw AppError.apiKeyMissing
+        case 400..<500:
+            AppLogger.api.error("Places API クライアントエラー (\(http.statusCode))")
+            throw AppError.unknown(NSError(domain: "Places", code: http.statusCode))
+        case 500...:
+            AppLogger.api.error("Places API サーバーエラー (\(http.statusCode))")
+            throw AppError.networkUnavailable
         default: break
         }
     }
@@ -128,9 +146,14 @@ final class PlacesRepository: StoreRepositoryProtocol {
     private func validateAPIStatus(_ status: String) throws {
         switch status {
         case "OK", "ZERO_RESULTS": break
-        case "REQUEST_DENIED": throw AppError.apiKeyMissing
-        case "OVER_QUERY_LIMIT": throw AppError.rateLimitExceeded
+        case "REQUEST_DENIED":
+            AppLogger.api.error("Places API REQUEST_DENIED")
+            throw AppError.apiKeyMissing
+        case "OVER_QUERY_LIMIT":
+            AppLogger.api.warning("Places API OVER_QUERY_LIMIT")
+            throw AppError.rateLimitExceeded
         default:
+            AppLogger.api.error("Places API 不明なステータス: \(status)")
             throw AppError.unknown(NSError(
                 domain: "Places",
                 code: -1,
