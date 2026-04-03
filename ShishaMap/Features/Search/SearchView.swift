@@ -30,14 +30,34 @@ struct SearchView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .searchable(text: $query, prompt: "店名・エリアで検索")
+        .onChange(of: query) { _, newValue in
+            if newValue.count > AppConstants.Validation.maxSearchQueryLength {
+                query = String(newValue.prefix(AppConstants.Validation.maxSearchQueryLength))
+            }
+        }
     }
 
     private var filteredStores: [Store] {
         guard !query.isEmpty else { return viewModel.filteredStores }
-        return viewModel.filteredStores.filter {
-            $0.name.localizedCaseInsensitiveContains(query) ||
-            $0.address.localizedCaseInsensitiveContains(query)
-        }
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return viewModel.filteredStores }
+
+        return viewModel.filteredStores
+            .filter {
+                $0.name.localizedCaseInsensitiveContains(trimmed) ||
+                $0.address.localizedCaseInsensitiveContains(trimmed)
+            }
+            .sorted { lhs, rhs in
+                matchScore(lhs.name, query: trimmed) > matchScore(rhs.name, query: trimmed)
+            }
+    }
+
+    /// 店名の一致度スコア: 完全一致(3) > 前方一致(2) > 部分一致(1) > 不一致(0)
+    private func matchScore(_ name: String, query: String) -> Int {
+        if name.localizedCaseInsensitiveCompare(query) == .orderedSame { return 3 }
+        if name.localizedLowercase.hasPrefix(query.localizedLowercase) { return 2 }
+        if name.localizedCaseInsensitiveContains(query) { return 1 }
+        return 0
     }
 }
 
