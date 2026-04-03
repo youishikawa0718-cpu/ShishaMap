@@ -70,12 +70,16 @@ final class StoreViewModel {
 
     /// エリア名でシーシャ店を検索する
     func searchByArea(query: String) async {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              trimmed.count <= AppConstants.Validation.maxSearchQueryLength else { return }
+
         isGeocodingLoading = true
         errorMessage = nil
         defer { isGeocodingLoading = false }
         do {
-            let coordinate = try await geocoder.coordinate(for: query)
-            searchedAreaName = query
+            let coordinate = try await geocoder.coordinate(for: trimmed)
+            searchedAreaName = trimmed
             searchedAreaCoordinate = coordinate
             await fetchNearby(coordinate: coordinate)
         } catch {

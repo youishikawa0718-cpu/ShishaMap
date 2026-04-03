@@ -183,7 +183,10 @@ struct StoreDetailView: View {
 
     @ViewBuilder
     private func phoneLink(phone: String) -> some View {
-        if let url = URL(string: "tel:\(phone.filter { $0.isNumber || $0 == "-" || $0 == "+" })") {
+        let sanitized = String(phone.unicodeScalars.filter {
+            AppConstants.Validation.allowedPhoneCharacters.contains($0)
+        })
+        if !sanitized.isEmpty, let url = URL(string: "tel:\(sanitized)") {
             Link(destination: url) {
                 Label(phone, systemImage: "phone")
                     .foregroundStyle(.brown)
@@ -191,10 +194,14 @@ struct StoreDetailView: View {
         }
     }
 
+    @ViewBuilder
     private func websiteLink(url: URL) -> some View {
-        Link(destination: url) {
-            Label("ウェブサイト", systemImage: "globe")
-                .foregroundStyle(.brown)
+        if let scheme = url.scheme?.lowercased(),
+           AppConstants.Validation.allowedURLSchemes.contains(scheme) {
+            Link(destination: url) {
+                Label("ウェブサイト", systemImage: "globe")
+                    .foregroundStyle(.brown)
+            }
         }
     }
 
@@ -284,6 +291,15 @@ private struct CheckInSheet: View {
                 Section("メモ（任意）") {
                     TextField("今日の一言", text: $note, axis: .vertical)
                         .lineLimit(3...5)
+                        .onChange(of: note) { _, newValue in
+                            if newValue.count > AppConstants.Validation.maxCheckInNoteLength {
+                                note = String(newValue.prefix(AppConstants.Validation.maxCheckInNoteLength))
+                            }
+                        }
+                    Text("\(note.count)/\(AppConstants.Validation.maxCheckInNoteLength)")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                 }
             }
             .navigationTitle("チェックイン")
@@ -291,7 +307,8 @@ private struct CheckInSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") {
-                        let record = CheckIn(date: .now, note: note.isEmpty ? nil : note, store: store)
+                        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let record = CheckIn(date: .now, note: trimmed.isEmpty ? nil : trimmed, store: store)
                         modelContext.insert(record)
                         dismiss()
                     }

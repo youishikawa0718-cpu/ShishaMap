@@ -55,4 +55,17 @@ enum AppConstants {
         /// 最近見た店舗の最大保持件数
         static let maxRecentlyViewed = 20
     }
+
+    // MARK: - Validation
+
+    enum Validation {
+        /// 検索キーワードの最大文字数
+        static let maxSearchQueryLength = 100
+        /// チェックインノートの最大文字数
+        static let maxCheckInNoteLength = 500
+        /// 電話番号に許可する文字セット
+        static let allowedPhoneCharacters = CharacterSet(charactersIn: "0123456789+-() ")
+        /// URLスキームのホワイトリスト
+        static let allowedURLSchemes: Set<String> = ["http", "https", "tel"]
+    }
 }

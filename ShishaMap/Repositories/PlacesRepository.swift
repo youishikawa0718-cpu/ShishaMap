@@ -66,6 +66,7 @@ final class PlacesRepository: StoreRepositoryProtocol {
 
         var seen = Set<String>()
         let stores = allResults
+            .filter { !$0.placeId.isEmpty && !$0.name.isEmpty }
             .filter { seen.insert($0.placeId).inserted }
             .map { Store(from: $0) }
 
@@ -275,18 +276,24 @@ private extension Store {
     convenience init(from detail: PlaceDetail, placeID: String) {
         self.init(
             placeID: placeID,
-            name: detail.name ?? "",
-            address: detail.formattedAddress ?? "",
+            name: detail.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+            address: detail.formattedAddress?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
             latitude: 0,
             longitude: 0
         )
-        self.phoneNumber = detail.formattedPhoneNumber
-        self.websiteURL = detail.website
-        self.openingHours = detail.openingHours?.weekdayText ?? []
+        self.phoneNumber = detail.formattedPhoneNumber?.trimmingCharacters(in: .whitespacesAndNewlines)
+        // URLスキームが安全なものかバリデーション
+        if let website = detail.website,
+           let url = URL(string: website),
+           let scheme = url.scheme?.lowercased(),
+           AppConstants.Validation.allowedURLSchemes.contains(scheme) {
+            self.websiteURL = website
+        }
+        self.openingHours = detail.openingHours?.weekdayText?.filter { !$0.isEmpty } ?? []
         self.isOpenNow = detail.openingHours?.openNow ?? false
-        self.photoReferences = detail.photos?.map { $0.photoReference } ?? []
-        self.priceLevel = detail.priceLevel
-        self.rating = detail.rating
-        self.userRatingsTotal = detail.userRatingsTotal
+        self.photoReferences = detail.photos?.map { $0.photoReference }.filter { !$0.isEmpty } ?? []
+        self.priceLevel = detail.priceLevel.flatMap { (0...4).contains($0) ? $0 : nil }
+        self.rating = detail.rating.flatMap { (0.0...5.0).contains($0) ? $0 : nil }
+        self.userRatingsTotal = detail.userRatingsTotal.flatMap { $0 >= 0 ? $0 : nil }
     }
 }
