@@ -5,6 +5,7 @@ enum AppError: LocalizedError {
     case apiKeyMissing
     case rateLimitExceeded
     case locationPermissionDenied
+    case geocodingFailed
     case unknown(Error)
 
     var errorDescription: String? {
@@ -13,6 +14,7 @@ enum AppError: LocalizedError {
         case .apiKeyMissing:            return "APIキーが設定されていません"
         case .rateLimitExceeded:        return "しばらくしてから再度お試しください"
         case .locationPermissionDenied: return "位置情報の使用を許可してください"
+        case .geocodingFailed:         return "エリアが見つかりませんでした"
         case .unknown(let e):           return e.localizedDescription
         }
     }
