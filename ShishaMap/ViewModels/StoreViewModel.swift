@@ -1,5 +1,6 @@
 import CoreLocation
 import Observation
+import OSLog
 import SwiftData
 
 @MainActor
@@ -63,6 +64,7 @@ final class StoreViewModel {
             stores = fetched.map { upsert($0) }
         } catch {
             let appError = AppError(from: error)
+            AppLogger.viewModel.error("fetchNearby失敗: \(appError.errorDescription ?? "")")
             errorMessage = appError.errorDescription
             isRetryable = appError.isRetryable
         }
@@ -84,6 +86,7 @@ final class StoreViewModel {
             await fetchNearby(coordinate: coordinate)
         } catch {
             let appError = AppError(from: error)
+            AppLogger.viewModel.error("searchByArea失敗 query=\(query): \(appError.errorDescription ?? "")")
             errorMessage = appError.errorDescription
             isRetryable = appError.isRetryable
         }
