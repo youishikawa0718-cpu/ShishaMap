@@ -22,10 +22,15 @@ final class StoreViewModel {
     var searchedAreaCoordinate: CLLocationCoordinate2D? = nil
     var isGeocodingLoading = false
 
+    // テキスト検索
+    var textSearchResults: [Store] = []
+    var isTextSearching = false
+
     // MARK: - 非公開
     private let repository: StoreRepositoryProtocol
     private let geocoder: GeocoderProtocol
     private var fetchTask: Task<Void, Never>?
+    private var textSearchTask: Task<Void, Never>?
     private var lastCoordinate: CLLocationCoordinate2D?
     var modelContext: ModelContext?
 
@@ -39,7 +44,14 @@ final class StoreViewModel {
     // MARK: - ユースケース
 
     /// 現在地周辺の店舗を取得する（0.5秒デバウンス付き）
+    /// 前回取得地点と近い場合（100m以内）はスキップして無駄なAPIコールを防ぐ
     func fetchNearbyDebounced(coordinate: CLLocationCoordinate2D) {
+        // 前回と近い座標なら再取得しない
+        if let last = lastCoordinate {
+            let distance = CLLocation(latitude: last.latitude, longitude: last.longitude)
+                .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+            if distance < 100 { return }
+        }
         fetchTask?.cancel()
         fetchTask = Task {
             try? await Task.sleep(for: .milliseconds(AppConstants.Search.debounceMilliseconds))
@@ -90,6 +102,39 @@ final class StoreViewModel {
             errorMessage = appError.errorDescription
             isRetryable = appError.isRetryable
         }
+    }
+
+    /// テキスト入力に応じてリアルタイムにシーシャ店を検索する（0.5秒デバウンス）
+    func searchByTextDebounced(query: String) {
+        textSearchTask?.cancel()
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              trimmed.count >= 2,
+              trimmed.count <= AppConstants.Validation.maxSearchQueryLength else {
+            textSearchResults = []
+            return
+        }
+        textSearchTask = Task {
+            try? await Task.sleep(for: .milliseconds(AppConstants.Search.debounceMilliseconds))
+            guard !Task.isCancelled else { return }
+            isTextSearching = true
+            defer { isTextSearching = false }
+            do {
+                let results = try await repository.searchByText(query: trimmed)
+                guard !Task.isCancelled else { return }
+                textSearchResults = results.map { upsert($0) }
+            } catch {
+                guard !Task.isCancelled else { return }
+                textSearchResults = []
+            }
+        }
+    }
+
+    /// テキスト検索をクリアする
+    func clearTextSearch() {
+        textSearchTask?.cancel()
+        textSearchResults = []
+        isTextSearching = false
     }
 
     /// 検索結果タップ時にマップタブへ切り替えて該当店舗にフォーカスする

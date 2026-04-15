@@ -122,6 +122,48 @@ final class PlacesRepository: StoreRepositoryProtocol {
         return store
     }
 
+    func searchByText(query: String) async throws -> [Store] {
+        #if DEBUG
+        guard !apiKey.isEmpty else { throw AppError.apiKeyMissing }
+        #else
+        guard !apiKey.isEmpty else { return [] }
+        #endif
+
+        AppLogger.api.debug("searchByText開始 query=\(query, privacy: .private)")
+
+        let cacheKey = "text_\(query)" as NSString
+        if let entry = cache.object(forKey: cacheKey), entry.isValid {
+            return entry.stores
+        }
+
+        guard var components = URLComponents(string: "https://maps.googleapis.com/maps/api/place/textsearch/json") else {
+            throw AppError.unknown(NSError(domain: "PlacesRepository", code: -1))
+        }
+        components.queryItems = [
+            .init(name: "query", value: "\(query) シーシャ"),
+            .init(name: "language", value: "ja"),
+            .init(name: "key", value: apiKey)
+        ]
+
+        guard let url = components.url else {
+            throw AppError.unknown(NSError(domain: "PlacesRepository", code: -1))
+        }
+        let (data, response) = try await URLSession.shared.data(from: url)
+        try validateHTTPResponse(response)
+
+        let decoded = try JSONDecoder().decode(TextSearchResponse.self, from: data)
+        try validateAPIStatus(decoded.status)
+
+        var seen = Set<String>()
+        let stores = decoded.results
+            .filter { seen.insert($0.placeId).inserted }
+            .map { Store(from: $0) }
+
+        AppLogger.api.debug("searchByText完了 \(stores.count)件取得")
+        cache.setObject(CacheEntry(stores: stores), forKey: cacheKey)
+        return stores
+    }
+
     // MARK: - Validation
 
     private func validateHTTPResponse(_ response: URLResponse) throws {
@@ -214,6 +256,33 @@ private struct PlaceResult: Decodable {
     }
 }
 
+// MARK: - Text Search Codable
+
+private struct TextSearchResponse: Decodable {
+    let results: [TextSearchResult]
+    let status: String
+}
+
+private struct TextSearchResult: Decodable {
+    let placeId: String
+    let name: String
+    let formattedAddress: String
+    let geometry: PlaceResult.Geometry
+    let openingHours: PlaceResult.OpeningHours?
+    let priceLevel: Int?
+    let photos: [PhotoRef]?
+
+    enum CodingKeys: String, CodingKey {
+        case placeId = "place_id"
+        case name
+        case formattedAddress = "formatted_address"
+        case geometry
+        case openingHours = "opening_hours"
+        case priceLevel = "price_level"
+        case photos
+    }
+}
+
 // MARK: - Details Codable
 
 private struct PlaceDetailResponse: Decodable {
@@ -285,6 +354,20 @@ private extension Store {
             placeID: result.placeId,
             name: result.name,
             address: result.vicinity,
+            latitude: result.geometry.location.lat,
+            longitude: result.geometry.location.lng,
+            flavors: detectFlavors(from: result.name)
+        )
+        self.priceLevel = result.priceLevel
+        self.photoReferences = result.photos?.map { $0.photoReference } ?? []
+        self.isOpenNow = result.openingHours?.openNow ?? false
+    }
+
+    convenience init(from result: TextSearchResult) {
+        self.init(
+            placeID: result.placeId,
+            name: result.name,
+            address: result.formattedAddress,
             latitude: result.geometry.location.lat,
             longitude: result.geometry.location.lng,
             flavors: detectFlavors(from: result.name)

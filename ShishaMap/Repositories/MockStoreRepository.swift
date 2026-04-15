@@ -11,4 +11,11 @@ final class MockStoreRepository: StoreRepositoryProtocol {
         }
         return store
     }
+
+    func searchByText(query: String) async throws -> [Store] {
+        return Store.mocks.filter {
+            $0.name.localizedCaseInsensitiveContains(query) ||
+            $0.address.localizedCaseInsensitiveContains(query)
+        }
+    }
 }

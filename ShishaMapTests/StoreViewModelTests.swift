@@ -86,4 +86,8 @@ private final class FailingStoreRepository: StoreRepositoryProtocol {
     func fetchDetail(placeID: String) async throws -> Store {
         throw URLError(.notConnectedToInternet)
     }
+
+    func searchByText(query: String) async throws -> [Store] {
+        throw URLError(.notConnectedToInternet)
+    }
 }
