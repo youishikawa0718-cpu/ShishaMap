@@ -14,7 +14,7 @@ struct MiniCardView: View {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(Color.brown.opacity(0.15))
                         .frame(width: 56, height: 56)
-                    Image(systemName: "smoke.fill")
+                    Image(systemName: "wind")
                         .foregroundStyle(Color.brown)
                         .font(.system(size: 24))
                 }

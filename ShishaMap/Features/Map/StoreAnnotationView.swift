@@ -10,9 +10,9 @@ struct StoreAnnotationView: View {
                     Circle()
                         .fill(Color.brown)
                         .frame(width: 36, height: 36)
-                    Image(systemName: "smoke.fill")
+                    Image(systemName: "wind")
                         .foregroundStyle(.white)
-                        .font(.system(size: 16))
+                        .font(.system(size: 16, weight: .semibold))
                 }
                 if store.isOpenNow {
                     Circle()

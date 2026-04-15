@@ -86,7 +86,7 @@ struct StoreDetailView: View {
         Rectangle()
             .fill(Color(.secondarySystemBackground))
             .overlay {
-                Image(systemName: "smoke.fill")
+                Image(systemName: "wind")
                     .font(.system(size: 48))
                     .foregroundStyle(Color.brown.opacity(0.5))
             }
