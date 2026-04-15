@@ -144,7 +144,7 @@ ShishaMap/
 
 - 位置情報は店舗の検索にのみ使用し、外部サーバーには送信しません
 - すべてのユーザーデータ（お気に入り・チェックイン）は端末内にのみ保存されます
-- [プライバシーポリシー](https://youishikawa0718-cpu.github.io/ChillSpot/privacy-policy.html)
+- [プライバシーポリシー](https://youishikawa0718-cpu.github.io/ShishaMap/privacy-policy.html)
 
 ## ライセンス
 

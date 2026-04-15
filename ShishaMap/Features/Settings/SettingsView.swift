@@ -105,8 +105,8 @@ struct SettingsView: View {
     }
 
     private enum URLs {
-        static let privacyPolicy = URL(string: "https://youishikawa0718-cpu.github.io/ChillSpot/privacy-policy.html")!
-        static let termsOfService = URL(string: "https://youishikawa0718-cpu.github.io/ChillSpot/terms-of-service.html")!
+        static let privacyPolicy = URL(string: "https://youishikawa0718-cpu.github.io/ShishaMap/privacy-policy.html")!
+        static let termsOfService = URL(string: "https://youishikawa0718-cpu.github.io/ShishaMap/terms-of-service.html")!
         static let contactEmail = URL(string: "mailto:youishikawa0718@gmail.com?subject=ChillSpot%E3%81%B8%E3%81%AE%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B")
     }
 }
