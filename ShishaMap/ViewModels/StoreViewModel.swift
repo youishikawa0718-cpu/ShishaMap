@@ -82,7 +82,7 @@ final class StoreViewModel {
         }
     }
 
-    /// エリア名でシーシャ店を検索する
+    /// エリア名で店舗を検索する
     func searchByArea(query: String) async {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty,
@@ -104,7 +104,7 @@ final class StoreViewModel {
         }
     }
 
-    /// テキスト入力に応じてリアルタイムにシーシャ店を検索する（0.5秒デバウンス）
+    /// テキスト入力に応じてリアルタイムに店舗を検索する（0.5秒デバウンス）
     func searchByTextDebounced(query: String) {
         textSearchTask?.cancel()
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)

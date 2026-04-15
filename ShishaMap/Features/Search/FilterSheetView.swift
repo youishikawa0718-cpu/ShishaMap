@@ -10,7 +10,7 @@ struct FilterSheetView: View {
                 Section("条件") {
                     Toggle("営業中のみ", isOn: $filter.openNow)
                     Toggle("個室あり", isOn: $filter.hasPrivateRoom)
-                    Toggle("シーシャ専門店のみ", isOn: $filter.specialtyOnly)
+                    Toggle("シーシャあり", isOn: $filter.specialtyOnly)
                 }
 
                 Section("価格帯（最大）") {

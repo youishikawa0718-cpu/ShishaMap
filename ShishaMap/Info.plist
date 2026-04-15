@@ -5,6 +5,6 @@
 	<key>PLACES_API_KEY</key>
 	<string>$(PLACES_API_KEY)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>近くのシーシャ店を地図に表示するために現在地を使用します</string>
+	<string>近くのお店を地図に表示するために現在地を使用します</string>
 </dict>
 </plist>

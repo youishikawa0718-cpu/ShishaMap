@@ -9,7 +9,7 @@ import SwiftData
 import SwiftUI
 
 @main
-struct ShishaMapApp: App {
+struct ChillSpotApp: App {
     @State private var viewModel: StoreViewModel
     @State private var locationManager = LocationManager()
 
@@ -38,7 +38,7 @@ struct ShishaMapApp: App {
     /// SwiftDataの保存先をData Protection属性付きディレクトリに配置する
     private static var defaultStoreURL: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let dir = appSupport.appendingPathComponent("ShishaMap", isDirectory: true)
+        let dir = appSupport.appendingPathComponent("ChillSpot", isDirectory: true)
         if !FileManager.default.fileExists(atPath: dir.path) {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             // completeUntilFirstUserAuthentication: デバイスロック解除後にアクセス可能
@@ -48,7 +48,7 @@ struct ShishaMapApp: App {
             )
         }
         // バックアップから除外（ユーザーデータはAPI再取得可能）
-        var url = dir.appendingPathComponent("ShishaMap.store")
+        var url = dir.appendingPathComponent("ChillSpot.store")
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         try? url.setResourceValues(values)

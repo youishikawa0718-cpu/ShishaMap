@@ -22,7 +22,7 @@ struct LaunchScreenView: View {
                     .scaleEffect(iconScale)
                     .rotationEffect(.degrees(iconRotation))
 
-                Text("ShishaMap")
+                Text("ChillSpot")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.brown)

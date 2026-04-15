@@ -148,7 +148,7 @@ struct SearchView: View {
                 }
             } header: {
                 if let areaName = viewModel.searchedAreaName {
-                    Label("\(areaName) 付近のシーシャ店", systemImage: "mappin.and.ellipse")
+                    Label("\(areaName) 付近のお店", systemImage: "mappin.and.ellipse")
                         .font(.subheadline.bold())
                         .foregroundStyle(.primary)
                         .textCase(nil)

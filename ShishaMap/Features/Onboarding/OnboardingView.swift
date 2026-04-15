@@ -30,8 +30,8 @@ struct OnboardingView: View {
     private var welcomePage: some View {
         OnboardingPageView(
             assetImage: "LaunchIcon",
-            title: "ShishaMap へようこそ",
-            subtitle: "近くのシーシャ店を見つけて、\nお気に入りを記録しましょう"
+            title: "ChillSpot へようこそ",
+            subtitle: "近くのカフェやラウンジを見つけて、\nお気に入りを記録しましょう"
         )
     }
 
@@ -42,7 +42,7 @@ struct OnboardingView: View {
             systemImage: "location.circle.fill",
             imageColor: .blue,
             title: "現在地から近くの店舗を検索",
-            subtitle: "位置情報を使って、あなたの周辺にある\nシーシャ店を地図上に表示します"
+            subtitle: "位置情報を使って、あなたの周辺にある\nお店を地図上に表示します"
         )
     }
 
@@ -56,7 +56,7 @@ struct OnboardingView: View {
                 .font(.system(size: 72))
                 .foregroundStyle(.orange)
 
-            Text("あなただけのシーシャマップを作ろう")
+            Text("あなただけのチルスポットを見つけよう")
                 .font(.title2).bold()
                 .multilineTextAlignment(.center)
 
