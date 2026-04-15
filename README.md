@@ -119,18 +119,26 @@ ShishaMap/
 1. リポジトリをクローン
    ```
    git clone https://github.com/youishikawa0718-cpu/ShishaMap.git
+   cd ShishaMap
    ```
 
 2. APIキーの設定
    ```
-   cp ShishaMap/Secrets.xcconfig.example ShishaMap/Secrets.xcconfig
+   echo 'PLACES_API_KEY = YOUR_API_KEY_HERE' > ShishaMap/Secrets.xcconfig
    ```
-   `Secrets.xcconfig` に Google Places API キーを記入：
+   `YOUR_API_KEY_HERE` を [Google Cloud Console](https://console.cloud.google.com/) で取得した Places API キーに置き換えてください。
+
+   > **注意**: `Secrets.xcconfig` は `.gitignore` で除外されているため、リポジトリには含まれません。
+
+3. Xcode でプロジェクトを開く
    ```
-   PLACES_API_KEY = YOUR_API_KEY_HERE
+   open ShishaMap.xcodeproj
    ```
 
-3. Xcode でプロジェクトを開きビルド
+4. ビルド & 実行
+   - Scheme: **ShishaMap**
+   - Destination: **iPhone 17**（iOS 26.3）
+   - `Cmd + R` でビルド & 実行
 
 ## プライバシー
 
