@@ -10,8 +10,16 @@ import SwiftUI
 
 @main
 struct ShishaMapApp: App {
-    @State private var viewModel = StoreViewModel(repository: PlacesRepository())
+    @State private var viewModel: StoreViewModel
     @State private var locationManager = LocationManager()
+
+    init() {
+        let container = Self.modelContainer
+        _viewModel = State(initialValue: StoreViewModel(
+            repository: PlacesRepository(),
+            modelContext: container.mainContext
+        ))
+    }
 
     private static let modelContainer: ModelContainer = {
         let schema = Schema([Store.self, CheckIn.self, RecentlyViewed.self])
@@ -47,11 +55,35 @@ struct ShishaMapApp: App {
         return url
     }
 
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var showLaunch = true
+
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(viewModel)
-                .environment(locationManager)
+            ZStack {
+                if hasCompletedOnboarding {
+                    RootView()
+                        .environment(viewModel)
+                        .environment(locationManager)
+                } else {
+                    OnboardingView {
+                        hasCompletedOnboarding = true
+                    }
+                    .environment(locationManager)
+                }
+
+                if showLaunch {
+                    LaunchScreenView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                }
+            }
+            .task {
+                try? await Task.sleep(for: .seconds(1.8))
+                withAnimation {
+                    showLaunch = false
+                }
+            }
         }
         .modelContainer(Self.modelContainer)
     }

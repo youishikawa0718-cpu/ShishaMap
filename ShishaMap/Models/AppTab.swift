@@ -5,4 +5,5 @@ enum AppTab: Hashable {
     case map
     case search
     case favorites
+    case settings
 }

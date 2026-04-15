@@ -18,6 +18,10 @@ struct RootView: View {
             FavoritesView()
                 .tabItem { Label("お気に入り", systemImage: "heart.fill") }
                 .tag(AppTab.favorites)
+
+            SettingsView()
+                .tabItem { Label("設定", systemImage: "gearshape") }
+                .tag(AppTab.settings)
         }
         .tint(.brown)
     }
