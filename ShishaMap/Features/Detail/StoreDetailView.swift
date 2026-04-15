@@ -19,11 +19,6 @@ struct StoreDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
-                    Image(systemName: "chevron.down")
-                }
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack {
                     ShareLink(item: shareText, subject: Text(store.name)) {
@@ -221,13 +216,16 @@ struct StoreDetailView: View {
     private var bottomBar: some View {
         HStack(spacing: 12) {
             Button { openInMaps() } label: {
-                Label("ナビ", systemImage: "map")
+                Label("ナビ", systemImage: "map.fill")
+                    .bold()
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(.borderedProminent)
+            .tint(.blue)
 
             Button { showCheckInSheet = true } label: {
                 Label("チェックイン", systemImage: "location.fill")
+                    .bold()
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)

@@ -7,6 +7,7 @@ struct MapView: View {
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .tokyo)
     @State private var selectedStoreID: String?
     @State private var showFilter = false
+    @State private var showDetail = false
 
     var body: some View {
         ZStack {
@@ -15,10 +16,21 @@ struct MapView: View {
         }
         .sheet(item: selectedStore) { store in
             NavigationStack {
-                MiniCardView(store: store)
+                if showDetail {
+                    StoreDetailView(store: store)
+                } else {
+                    MiniCardView(store: store) {
+                        withAnimation { showDetail = true }
+                    }
+                }
             }
-            .presentationDetents([.height(180)])
-            .presentationBackgroundInteraction(.enabled)
+            .presentationDetents(showDetail ? [.large] : [.height(180)],
+                                 selection: .constant(showDetail ? .large : .height(180)))
+            .presentationBackgroundInteraction(showDetail ? .disabled : .enabled)
+            .presentationDragIndicator(.visible)
+        }
+        .onChange(of: selectedStoreID) { _, _ in
+            showDetail = false
         }
         .sheet(isPresented: $showFilter) {
             FilterSheetView(filter: Bindable(viewModel).filter)
@@ -45,6 +57,9 @@ struct MapView: View {
                     longitudinalMeters: 500
                 ))
             }
+            // 詳細カードを表示
+            selectedStoreID = store.placeID
+            showDetail = true
             viewModel.mapFocusedStore = nil
         }
     }

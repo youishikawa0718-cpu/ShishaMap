@@ -2,10 +2,11 @@ import SwiftUI
 
 struct MiniCardView: View {
     let store: Store
+    var onTapDetail: (() -> Void)?
 
     var body: some View {
-        NavigationLink {
-            StoreDetailView(store: store)
+        Button {
+            onTapDetail?()
         } label: {
             HStack(spacing: 12) {
                 // アイコン
@@ -29,7 +30,6 @@ struct MiniCardView: View {
                         .lineLimit(1)
 
                     HStack(spacing: 6) {
-                        // 営業中バッジ
                         if store.isOpenNow {
                             Text("営業中")
                                 .font(.caption2).bold()
