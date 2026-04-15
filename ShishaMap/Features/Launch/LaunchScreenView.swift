@@ -22,7 +22,7 @@ struct LaunchScreenView: View {
                     .scaleEffect(iconScale)
                     .rotationEffect(.degrees(iconRotation))
 
-                Text("ChillSpot")
+                Text("ChillSearching")
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundStyle(.brown)

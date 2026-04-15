@@ -30,7 +30,7 @@ struct OnboardingView: View {
     private var welcomePage: some View {
         OnboardingPageView(
             assetImage: "LaunchIcon",
-            title: "ChillSpot へようこそ",
+            title: "ChillSearching へようこそ",
             subtitle: "近くのカフェやラウンジを見つけて、\nお気に入りを記録しましょう"
         )
     }
@@ -56,7 +56,7 @@ struct OnboardingView: View {
                 .font(.system(size: 72))
                 .foregroundStyle(.orange)
 
-            Text("あなただけのチルスポットを見つけよう")
+            Text("あなただけのお気に入りを見つけよう")
                 .font(.title2).bold()
                 .multilineTextAlignment(.center)
 

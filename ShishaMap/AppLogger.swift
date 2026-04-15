@@ -13,5 +13,5 @@ enum AppLogger {
     /// 位置情報関連のログ
     static let location = Logger(subsystem: subsystem, category: "Location")
 
-    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.chillspot"
+    private static let subsystem = Bundle.main.bundleIdentifier ?? "com.chillsearching"
 }
