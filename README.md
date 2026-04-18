@@ -1,6 +1,6 @@
 # ChillSearching
 
-くつろげるカフェやラウンジをマップで発見できるiOSアプリ。
+くつろげるシーシャカフェやラウンジをマップで発見できるiOSアプリ。
 
 <p align="center">
   <img src="docs/screenshots/map.png" width="180">
